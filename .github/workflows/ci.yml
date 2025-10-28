@@ -5,6 +5,10 @@ on:
     branches: [main, dev, feature/**]
   pull_request:
 
+permissions:
+  contents: read
+  actions: write # cần cho actions/upload-artifact@v4
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
