@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"] # mỗi lần push tag v* sẽ chạy
+  workflow_dispatch: # cho phép bấm tay chạy
+
+permissions:
+  contents: write # bắt buộc để tạo Release & upload asset
+  actions: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # cần đầy đủ tag / history cho release notes
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install build & test deps
+        run: |
+          python -m pip install -U pip
+          pip install build
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest -q --maxfail=1 --disable-warnings \
+            --cov=src --cov-report=xml:coverage.xml
+
+      - name: Build package (sdist + wheel)
+        run: |
+          python -m build        # tạo dist/*.tar.gz và dist/*.whl
+          ls -la dist
+
+      - name: Checksums (sha256)
+        run: |
+          cd dist
+          for f in *; do sha256sum "$f" >> SHA256SUMS.txt; done
+          cat SHA256SUMS.txt
+
+      - name: Create GitHub Release & upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/**
+          generate_release_notes: true
