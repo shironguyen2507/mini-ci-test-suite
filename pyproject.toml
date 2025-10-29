@@ -8,7 +8,6 @@ target-version = "py310"
 select = ["E","F","I"]     # cơ bản: lỗi cú pháp, import, định dạng
 exclude = ["dist","build",".venv"]
 
-# metadata để build release
 [project]
 name = "mini-ci-test-suite"
 version = "0.1.0"            # tạm; sẽ đồng bộ với tag khi phát hành
